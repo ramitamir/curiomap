@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "DEPLOYMENT.md",
+                "file": "Readme.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "DEPLOYMENT"
+              "title": "Readme"
             }
           }
         ],
@@ -109,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "DEPLOYMENT.md",
+                "file": "Readme.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -119,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for DEPLOYMENT"
+              "title": "Backlinks for Readme"
             }
           },
           {
@@ -128,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "DEPLOYMENT.md",
+                "file": "Readme.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from DEPLOYMENT"
+              "title": "Outgoing links from Readme"
             }
           },
           {
@@ -171,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "DEPLOYMENT.md",
+                "file": "Readme.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of DEPLOYMENT"
+              "title": "Outline of Readme"
             }
           }
         ]
@@ -200,8 +200,8 @@
   },
   "active": "28918930b903f96e",
   "lastOpenFiles": [
-    "Readme.md",
     "DEPLOYMENT.md",
+    "Readme.md",
     "Prompt.md",
     "src/app/api/generate-subject-from-items/route.ts",
     "src/app/api/generate-subject-from-items",
