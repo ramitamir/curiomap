@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --terminal-bg: #0a0e0a;
+  --terminal-green: #00ff41;
+  --terminal-dim: #00aa2e;
+  --terminal-glow: rgba(0, 255, 65, 0.5);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--terminal-bg);
+  color: var(--terminal-green);
+  font-family: 'Courier New', Courier, monospace;
+  overflow: hidden;
+  position: relative;
+}
+
+/* CRT scanline effect */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Subtle screen flicker */
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  50% { opacity: 1; }
+  100% { opacity: 0.97; }
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 255, 65, 0.02);
+  pointer-events: none;
+  z-index: 9998;
+  animation: flicker 0.15s infinite;
+}
+
+/* Text glow effect */
+.glow {
+  text-shadow: 0 0 5px var(--terminal-glow), 0 0 10px var(--terminal-glow);
+}
+
+/* Cursor blink */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.blink-cursor {
+  animation: blink 1s infinite;
+}
+
+/* Text cursor for editable elements */
+.cursor-text {
+  cursor: text;
+}
+
+/* No input focus glow - pure terminal */
+input:focus {
+  box-shadow: none;
+  outline: none;
+  border: none;
+}

@@ -1,0 +1,902 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import CurioGrid from '@/components/CurioGrid';
+import { Axis, Manifestation } from '@/lib/types';
+import { renderTextWithLinks } from '@/lib/markdown';
+
+export default function Home() {
+  const [subject, setSubject] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [xAxis, setXAxis] = useState<Axis | null>(null);
+  const [yAxis, setYAxis] = useState<Axis | null>(null);
+  const [manifestations, setManifestations] = useState<Manifestation[]>([]);
+  const [isGeneratingAxes, setIsGeneratingAxes] = useState(false);
+  const [isGeneratingItem, setIsGeneratingItem] = useState(false);
+  const [isGeneratingSubject, setIsGeneratingSubject] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [bootupComplete, setBootupComplete] = useState(false);
+  const [bootupText, setBootupText] = useState('');
+  const [hasAxisEdits, setHasAxisEdits] = useState(false);
+  const [editingAxis, setEditingAxis] = useState<{ axis: 'x' | 'y'; side: 'min' | 'max' } | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [selectedPoint, setSelectedPoint] = useState<Manifestation | null>(null);
+  const [isPlacingItem, setIsPlacingItem] = useState(false);
+  const [placementInput, setPlacementInput] = useState('');
+  const [inputMode, setInputMode] = useState<'subject' | 'items'>('subject');
+  const [itemSeeds, setItemSeeds] = useState<string[]>(['', '', '']);
+  const [subjectGeneratedFrom, setSubjectGeneratedFrom] = useState<string[] | null>(null);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  // Terminal bootup sequence
+  useEffect(() => {
+    const messages = [
+      'INITIALIZING CURIO.SPACE...',
+      'LOADING NEURAL CARTOGRAPHY SYSTEM...',
+      'ESTABLISHING GEMINI UPLINK...',
+      'CONNECTED.',
+    ];
+
+    let messageIndex = 0;
+    let charIndex = 0;
+    let fullText = '';
+
+    const typeInterval = setInterval(() => {
+      if (messageIndex < messages.length) {
+        if (charIndex < messages[messageIndex].length) {
+          fullText += messages[messageIndex][charIndex];
+          setBootupText(fullText);
+          charIndex++;
+        } else {
+          // Move to next message
+          fullText += '\n';
+          setBootupText(fullText);
+          messageIndex++;
+          charIndex = 0;
+        }
+      } else {
+        clearInterval(typeInterval);
+        setTimeout(() => setBootupComplete(true), 500);
+      }
+    }, 30);
+
+    return () => clearInterval(typeInterval);
+  }, []);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showMoreMenu) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('[data-more-menu]')) {
+          setShowMoreMenu(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMoreMenu]);
+
+  const handleGenerateAxes = async (subjectText: string, providedXAxis?: Partial<Axis>, providedYAxis?: Partial<Axis>) => {
+    // Clear old data immediately
+    setManifestations([]);
+    setSelectedPoint(null);
+    setHasAxisEdits(false);
+    setError(null);
+
+    setIsGeneratingAxes(true);
+
+    try {
+      const response = await fetch('/api/generate-axes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: subjectText,
+          xAxis: providedXAxis || {},
+          yAxis: providedYAxis || {},
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate axes');
+      }
+
+      const data = await response.json();
+      setXAxis(data.xAxis);
+      setYAxis(data.yAxis);
+      setSubject(subjectText);
+    } catch (err) {
+      setError('>> ERROR: AXIS GENERATION FAILED. RETRY?');
+      console.error(err);
+    } finally {
+      setIsGeneratingAxes(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputValue.trim()) {
+      handleGenerateAxes(inputValue.trim());
+    }
+  };
+
+  const handleGenerateSubject = async () => {
+    setIsGeneratingSubject(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/generate-subject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate subject');
+      }
+
+      const data = await response.json();
+
+      // Set the input value and auto-submit
+      setInputValue(data.subject);
+      handleGenerateAxes(data.subject);
+    } catch (err) {
+      console.error('Subject generation error:', err);
+      setError('>> ERROR: SUBJECT GENERATION FAILED. RETRY?');
+    } finally {
+      setIsGeneratingSubject(false);
+    }
+  };
+
+  const handleGenerateSubjectFromItems = async () => {
+    const validItems = itemSeeds.map(item => item.trim()).filter(item => item.length > 0);
+
+    if (validItems.length !== 3) {
+      setError('>> ERROR: PLEASE ENTER ALL 3 ITEMS');
+      return;
+    }
+
+    setIsGeneratingAxes(true);
+    setError(null);
+    setManifestations([]);
+    setSelectedPoint(null);
+    setHasAxisEdits(false);
+
+    try {
+      // Step 1: Generate subject from items
+      const subjectResponse = await fetch('/api/generate-subject-from-items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: validItems }),
+      });
+
+      if (!subjectResponse.ok) {
+        throw new Error('Failed to generate subject from items');
+      }
+
+      const subjectData = await subjectResponse.json();
+      const generatedSubject = subjectData.subject;
+
+      // Store the seed items for reference
+      setSubjectGeneratedFrom(validItems);
+
+      // Step 2: Generate axes for this subject
+      const axesResponse = await fetch('/api/generate-axes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: generatedSubject,
+          xAxis: {},
+          yAxis: {},
+        }),
+      });
+
+      if (!axesResponse.ok) {
+        throw new Error('Failed to generate axes');
+      }
+
+      const axesData = await axesResponse.json();
+      const generatedXAxis = axesData.xAxis;
+      const generatedYAxis = axesData.yAxis;
+
+      // Update state with subject and axes
+      setSubject(generatedSubject);
+      setXAxis(generatedXAxis);
+      setYAxis(generatedYAxis);
+
+      // Step 3: Auto-place the 3 seed items on the map
+      const newManifestations: Manifestation[] = [];
+
+      console.log('Auto-placing items:', validItems);
+
+      for (const itemName of validItems) {
+        try {
+          const existingNames = newManifestations.map(m => m.name);
+          console.log(`Placing "${itemName}", existing:`, existingNames);
+          const placeResponse = await fetch('/api/place-item', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              subject: generatedSubject,
+              xAxis: generatedXAxis,
+              yAxis: generatedYAxis,
+              itemName,
+              existingManifestations: existingNames,
+            }),
+          });
+
+          if (placeResponse.ok) {
+            const placeData = await placeResponse.json();
+            if (!placeData.cannotPlace) {
+              const newManifestation: Manifestation = {
+                id: uuidv4(),
+                x: placeData.x,
+                y: placeData.y,
+                name: placeData.name || itemName, // Use returned name, fallback to input
+                description: placeData.description,
+                reasoning: placeData.reasoning,
+                imageUrl: '',
+                timestamp: new Date().toISOString(),
+                isHallucination: false,
+              };
+              newManifestations.push(newManifestation);
+            } else {
+              // Log when item cannot be placed
+              console.warn(`Cannot place "${itemName}": ${placeData.explanation || placeData.description}`);
+            }
+          }
+        } catch (itemErr) {
+          console.error(`Failed to place item ${itemName}:`, itemErr);
+        }
+      }
+
+      // Update manifestations all at once
+      setManifestations(newManifestations);
+
+    } catch (err) {
+      console.error('Subject generation error:', err);
+      setError('>> ERROR: SUBJECT GENERATION FAILED. RETRY?');
+    } finally {
+      setIsGeneratingAxes(false);
+    }
+  };
+
+  const handleCoordinateClick = async (x: number, y: number) => {
+    if (!xAxis || !yAxis || isGeneratingItem) return;
+
+    setIsGeneratingItem(true);
+    setError(null);
+
+    try {
+      const existingNames = manifestations.map(m => m.name);
+      const response = await fetch('/api/manifest-item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject,
+          xAxis,
+          yAxis,
+          x,
+          y,
+          existingManifestations: existingNames,
+        }),
+      });
+
+      if (response.status === 429) {
+        setError('>> ERROR: RATE LIMIT. WAIT 60 SECONDS BEFORE NEXT MANIFESTATION.');
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        setError(`>> ERROR: ${errorData.error || 'MANIFESTATION FAILED'}`);
+        return;
+      }
+
+      const data = await response.json();
+
+      const newManifestation: Manifestation = {
+        id: uuidv4(),
+        x,
+        y,
+        name: data.name,
+        description: data.description,
+        reasoning: data.reasoning,
+        imageUrl: data.imageUrl,
+        timestamp: new Date().toISOString(),
+        isHallucination: data.isHallucination,
+        isImpossible: data.isImpossible || false,
+        impossibleExplanation: data.impossibleExplanation,
+      };
+
+      setManifestations((prev) => {
+        const filtered = prev.filter((m) => !(m.x === x && m.y === y));
+        return [...filtered, newManifestation];
+      });
+
+      // Auto-select the newly generated manifestation
+      setSelectedPoint(newManifestation);
+    } catch (err: any) {
+      console.error('Manifestation error:', err);
+      setError('>> ERROR: NETWORK FAILURE. CHECK CONNECTION.');
+    } finally {
+      setIsGeneratingItem(false);
+    }
+  };
+
+  const handleAxisUpdate = (axis: 'x' | 'y', updates: Partial<Axis>) => {
+    if (axis === 'x' && xAxis) {
+      setXAxis({ ...xAxis, ...updates });
+      setHasAxisEdits(true);
+    } else if (axis === 'y' && yAxis) {
+      setYAxis({ ...yAxis, ...updates });
+      setHasAxisEdits(true);
+    }
+  };
+
+  const handleReset = () => {
+    setSubject('');
+    setInputValue('');
+    setXAxis(null);
+    setYAxis(null);
+    setManifestations([]);
+    setError(null);
+    setHasAxisEdits(false);
+    setSelectedPoint(null);
+    setIsPlacingItem(false);
+    setPlacementInput('');
+    setInputMode('subject');
+    setItemSeeds(['', '', '']);
+    setSubjectGeneratedFrom(null);
+    setShowMoreMenu(false);
+  };
+
+  const handleRegenerate = () => {
+    if (!xAxis || !yAxis) return;
+    handleGenerateAxes(subject, xAxis, yAxis);
+  };
+
+  const startEditingAxis = (axis: 'x' | 'y', side: 'min' | 'max') => {
+    const currentValue = axis === 'x'
+      ? (side === 'min' ? xAxis?.minLabel : xAxis?.maxLabel)
+      : (side === 'min' ? yAxis?.minLabel : yAxis?.maxLabel);
+    setEditValue(currentValue || '');
+    setEditingAxis({ axis, side });
+  };
+
+  const saveAxisEdit = () => {
+    if (!editingAxis || !editValue.trim()) {
+      setEditingAxis(null);
+      return;
+    }
+
+    const updates = editingAxis.side === 'min'
+      ? { minLabel: editValue.trim() }
+      : { maxLabel: editValue.trim() };
+
+    handleAxisUpdate(editingAxis.axis, updates);
+    setEditingAxis(null);
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    setManifestations((prev) => prev.filter((m) => m.id !== itemId));
+    setSelectedPoint(null);
+  };
+
+  const handleSaveToFile = () => {
+    const saveData = {
+      subject,
+      xAxis,
+      yAxis,
+      manifestations,
+      subjectGeneratedFrom,
+      savedAt: new Date().toISOString(),
+    };
+
+    const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `curio-${subject.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleLoadFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+
+        // Validate the data structure
+        if (!data.subject || !data.xAxis || !data.yAxis || !Array.isArray(data.manifestations)) {
+          throw new Error('Invalid file format');
+        }
+
+        // Restore the state
+        setSubject(data.subject);
+        setXAxis(data.xAxis);
+        setYAxis(data.yAxis);
+        setManifestations(data.manifestations);
+        setSubjectGeneratedFrom(data.subjectGeneratedFrom || null);
+        setSelectedPoint(null);
+        setError(null);
+        setHasAxisEdits(false);
+      } catch (err) {
+        console.error('Failed to load file:', err);
+        setError('>> ERROR: INVALID FILE FORMAT');
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset the input so the same file can be loaded again
+    event.target.value = '';
+  };
+
+  const handlePlaceItem = async () => {
+    if (!xAxis || !yAxis || !placementInput.trim() || isGeneratingItem) return;
+
+    setIsPlacingItem(false);
+    setIsGeneratingItem(true);
+    setError(null);
+
+    try {
+      const existingNames = manifestations.map(m => m.name);
+      const response = await fetch('/api/place-item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject,
+          xAxis,
+          yAxis,
+          itemName: placementInput.trim(),
+          existingManifestations: existingNames,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        setError(`>> ERROR: ${errorData.error || 'PLACEMENT FAILED'}`);
+        return;
+      }
+
+      const data = await response.json();
+
+      // Check if item cannot be placed
+      if (data.cannotPlace) {
+        const cannotPlaceCard: Manifestation = {
+          id: uuidv4(),
+          x: 0,
+          y: 0,
+          name: 'Cannot Place',
+          description: data.description,
+          reasoning: '',
+          imageUrl: '',
+          timestamp: new Date().toISOString(),
+          isHallucination: false,
+          isImpossible: true,
+          impossibleExplanation: data.description,
+        };
+        setSelectedPoint(cannotPlaceCard);
+        setPlacementInput('');
+        return;
+      }
+
+      const newManifestation: Manifestation = {
+        id: uuidv4(),
+        x: data.x,
+        y: data.y,
+        name: data.name,
+        description: data.description,
+        reasoning: data.reasoning,
+        imageUrl: '',
+        timestamp: new Date().toISOString(),
+        isHallucination: false,
+      };
+
+      setManifestations((prev) => {
+        const filtered = prev.filter((m) => !(m.x === data.x && m.y === data.y));
+        return [...filtered, newManifestation];
+      });
+
+      // Auto-select the newly placed manifestation
+      setSelectedPoint(newManifestation);
+      setPlacementInput('');
+    } catch (err: any) {
+      console.error('Placement error:', err);
+      setError('>> ERROR: NETWORK FAILURE. CHECK CONNECTION.');
+    } finally {
+      setIsGeneratingItem(false);
+    }
+  };
+
+  // Bootup screen
+  if (!bootupComplete) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <pre className="text-green-500 text-sm whitespace-pre-wrap glow">
+          {bootupText}<span className="blink-cursor">█</span>
+        </pre>
+      </div>
+    );
+  }
+
+  // Main interface
+  return (
+    <div className="fixed inset-0 flex flex-row">
+      {/* Left: Map */}
+      <div className="flex-1 relative">
+        {isGeneratingAxes && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-green-500 text-sm animate-pulse glow">
+              GENERATING COORDINATE SYSTEM...
+            </p>
+          </div>
+        )}
+
+        {xAxis && yAxis && !isGeneratingAxes && (
+          <>
+            <CurioGrid
+              xAxis={xAxis}
+              yAxis={yAxis}
+              manifestations={manifestations}
+              onCoordinateClick={handleCoordinateClick}
+              onAxisUpdate={handleAxisUpdate}
+              onLabelClick={(axis, side) => {
+                if (!editingAxis) {
+                  startEditingAxis(axis, side);
+                }
+              }}
+              selectedPointId={selectedPoint?.id}
+              onPointSelect={setSelectedPoint}
+            />
+
+            {/* Edit input overlay (only shown when editing) */}
+            {editingAxis && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="pointer-events-auto">
+                  <input
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={saveAxisEdit}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveAxisEdit();
+                      if (e.key === 'Escape') setEditingAxis(null);
+                    }}
+                    className="bg-black border-2 border-green-500 text-green-500 px-4 py-2 text-base"
+                    style={{ fontFamily: '"Courier New", monospace' }}
+                    autoFocus
+                    placeholder="Enter label..."
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Place item input overlay */}
+            {isPlacingItem && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="pointer-events-auto flex flex-col items-center">
+                  <div className="text-green-500 text-sm glow mb-2">
+                    ENTER ITEM TO PLACE:
+                  </div>
+                  <input
+                    type="text"
+                    value={placementInput}
+                    onChange={(e) => setPlacementInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && placementInput.trim()) handlePlaceItem();
+                      if (e.key === 'Escape') {
+                        setIsPlacingItem(false);
+                        setPlacementInput('');
+                      }
+                    }}
+                    className="bg-black border-2 border-green-500 text-green-500 px-4 py-2 text-base mb-2"
+                    style={{ fontFamily: '"Courier New", monospace', minWidth: '300px' }}
+                    autoFocus
+                    placeholder="e.g., Tokyo Metro..."
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handlePlaceItem}
+                      disabled={!placementInput.trim()}
+                      className="bg-green-900 text-green-500 px-4 py-1 hover:bg-green-800 disabled:opacity-50 glow text-xs"
+                      style={{ fontFamily: '"Courier New", monospace' }}
+                    >
+                      [PLACE]
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsPlacingItem(false);
+                        setPlacementInput('');
+                      }}
+                      className="bg-black border border-green-900 text-green-500 px-4 py-1 hover:border-green-700 glow text-xs"
+                      style={{ fontFamily: '"Courier New", monospace' }}
+                    >
+                      [CANCEL]
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Right: Sidebar */}
+      <div className="w-96 bg-black border-l border-green-900 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="p-4 border-b border-green-900">
+          {!subject ? (
+            <div>
+              <div className="text-green-500 text-xs glow mb-3">
+                CURIO.SPACE // NEURAL CARTOGRAPHY SYSTEM v1.0
+              </div>
+
+              {inputMode === 'subject' ? (
+                // Default subject input
+                <>
+                  <form onSubmit={handleSubmit} className="flex items-center mb-2">
+                    <span className="text-green-500 mr-2 glow">&gt;</span>
+                    <input
+                      type="text"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      placeholder="enter subject..."
+                      className="flex-1 bg-transparent text-green-500 focus:outline-none placeholder-green-800 border-0 focus:ring-0"
+                      disabled={isGeneratingAxes || isGeneratingSubject}
+                      autoFocus
+                      style={{
+                        fontFamily: '"Courier New", monospace',
+                        boxShadow: 'none',
+                        outline: 'none'
+                      }}
+                    />
+                  </form>
+                  <div className="flex justify-end relative" data-more-menu>
+                    <button
+                      onClick={() => setShowMoreMenu(!showMoreMenu)}
+                      className="text-green-700 hover:text-green-500 text-xs cursor-pointer"
+                    >
+                      [MORE ▼]
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {showMoreMenu && (
+                      <div className="absolute top-full right-0 mt-1 bg-black border border-green-900 z-10 min-w-[160px]">
+                        <button
+                          onClick={() => {
+                            handleGenerateSubject();
+                            setShowMoreMenu(false);
+                          }}
+                          disabled={isGeneratingAxes || isGeneratingSubject}
+                          className="w-full text-left px-3 py-2 text-green-500 hover:bg-green-900 text-xs disabled:opacity-50 border-b border-green-900"
+                        >
+                          [SURPRISE ME]
+                        </button>
+                        <button
+                          onClick={() => {
+                            setInputMode('items');
+                            setShowMoreMenu(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-green-500 hover:bg-green-900 text-xs border-b border-green-900"
+                        >
+                          [FROM 3 ITEMS]
+                        </button>
+                        <label className="block w-full text-left px-3 py-2 text-green-500 hover:bg-green-900 text-xs cursor-pointer">
+                          [LOAD FROM FILE]
+                          <input
+                            type="file"
+                            accept=".json"
+                            onChange={(e) => {
+                              handleLoadFromFile(e);
+                              setShowMoreMenu(false);
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                // 3-items input form
+                <>
+                  <div className="space-y-2 mb-3">
+                    {[0, 1, 2].map((index) => (
+                      <div key={index} className="flex items-center">
+                        <span className="text-green-500 mr-2 glow text-xs">ITEM {index + 1}:</span>
+                        <input
+                          type="text"
+                          value={itemSeeds[index]}
+                          onChange={(e) => {
+                            const newSeeds = [...itemSeeds];
+                            newSeeds[index] = e.target.value;
+                            setItemSeeds(newSeeds);
+                          }}
+                          placeholder={`e.g., ${
+                            index === 0 ? 'Tokyo Metro' :
+                            index === 1 ? 'Bicycle' :
+                            'Rickshaw'
+                          }...`}
+                          className="flex-1 bg-transparent text-green-500 focus:outline-none placeholder-green-800 border-0 focus:ring-0"
+                          disabled={isGeneratingAxes}
+                          autoFocus={index === 0}
+                          style={{
+                            fontFamily: '"Courier New", monospace',
+                            boxShadow: 'none',
+                            outline: 'none'
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between">
+                    <button
+                      onClick={() => setInputMode('subject')}
+                      className="text-green-700 hover:text-green-500 text-xs cursor-pointer"
+                    >
+                      [BACK]
+                    </button>
+                    <button
+                      onClick={handleGenerateSubjectFromItems}
+                      disabled={isGeneratingAxes || isGeneratingItem || itemSeeds.filter(s => s.trim()).length < 3}
+                      className="text-green-500 hover:text-green-300 text-xs cursor-pointer disabled:opacity-50 glow disabled:cursor-not-allowed"
+                    >
+                      {isGeneratingAxes ? '[GENERATING...]' : '[GENERATE]'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div>
+              <div className="text-green-500 text-sm glow mb-2">
+                MAPPING: {subject.toUpperCase()}
+              </div>
+              {subjectGeneratedFrom && (
+                <div className="text-green-700 text-xs mb-2">
+                  [Generated from: {subjectGeneratedFrom.join(', ')}]
+                </div>
+              )}
+              <div className="flex items-center gap-4 text-green-700 text-xs">
+                <span>MANIFESTED: {manifestations.length}</span>
+                {isGeneratingItem && <span className="animate-pulse">GENERATING...</span>}
+              </div>
+              <div className="flex gap-2 mt-3 flex-wrap">
+                <button
+                  onClick={() => setIsPlacingItem(true)}
+                  className="text-green-500 hover:text-green-300 cursor-pointer text-xs"
+                  disabled={isGeneratingItem || isGeneratingAxes}
+                >
+                  [PLACE]
+                </button>
+                <button
+                  onClick={() => handleGenerateAxes(subject)}
+                  className="text-green-500 hover:text-green-300 cursor-pointer text-xs"
+                  disabled={isGeneratingAxes}
+                >
+                  [REDO AXES]
+                </button>
+                <button
+                  onClick={handleSaveToFile}
+                  className="text-green-500 hover:text-green-300 cursor-pointer text-xs"
+                >
+                  [SAVE]
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="text-green-500 hover:text-green-300 cursor-pointer text-xs"
+                >
+                  [NEW]
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="p-4 bg-red-950 border-b border-red-900">
+            <p className="text-red-500 text-sm font-mono">{error}</p>
+          </div>
+        )}
+
+        {/* Regenerate button (appears when axes are edited) */}
+        {hasAxisEdits && !isGeneratingAxes && (
+          <div className="p-4 border-b border-green-900">
+            <button
+              onClick={handleRegenerate}
+              className="w-full py-2 bg-green-900 text-green-500 hover:bg-green-800 glow font-bold animate-pulse"
+              style={{ fontFamily: '"Courier New", monospace' }}
+            >
+              [REDO BOARD]
+            </button>
+          </div>
+        )}
+
+        {/* Selected point card - scrollable */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {isGeneratingItem ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-green-500 text-sm glow animate-pulse mb-2">
+                MANIFESTING...
+              </div>
+              <div className="text-green-700 text-xs">
+                [CONSULTING GEMINI UPLINK]
+              </div>
+            </div>
+          ) : selectedPoint ? (
+            <div>
+              <div className="mb-3 flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-green-500 font-bold text-lg glow mb-1">
+                    {selectedPoint.name}
+                    {selectedPoint.isImpossible && (
+                      <span className="ml-2 text-xs text-red-500">[IMPOSSIBLE]</span>
+                    )}
+                  </h3>
+                  <p className="text-green-400 text-sm">
+                    COORDS: ({selectedPoint.x}, {selectedPoint.y})
+                  </p>
+                </div>
+                {!selectedPoint.isImpossible && (
+                  <button
+                    onClick={() => handleDeleteItem(selectedPoint.id)}
+                    className="text-red-500 hover:text-red-400 text-xs cursor-pointer ml-2"
+                    title="Delete this item"
+                  >
+                    [DELETE]
+                  </button>
+                )}
+              </div>
+
+              {/* Show explanation for impossible coords, description otherwise */}
+              {selectedPoint.isImpossible ? (
+                <p className="text-red-400 text-sm leading-relaxed">
+                  {renderTextWithLinks(selectedPoint.impossibleExplanation || selectedPoint.description)}
+                </p>
+              ) : (
+                <>
+                  <p className="text-green-300 text-sm leading-relaxed mb-4">
+                    {renderTextWithLinks(selectedPoint.description)}
+                  </p>
+                  <details className="text-xs text-green-600">
+                    <summary className="cursor-pointer hover:text-green-400">[REASONING]</summary>
+                    <p className="mt-2 pl-2 border-l border-green-800 text-green-500">
+                      {renderTextWithLinks(selectedPoint.reasoning)}
+                    </p>
+                  </details>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="text-green-700 text-sm">
+              {xAxis && yAxis ? (
+                <p>[CLICK A COORDINATE TO VIEW DETAILS]</p>
+              ) : (
+                <p>[ENTER A SUBJECT TO BEGIN MAPPING]</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Instructions footer - always visible */}
+        {xAxis && yAxis && (
+          <div className="p-4 border-t border-green-900">
+            <p className="text-green-700 text-xs mb-2">[INSTRUCTIONS]</p>
+            <p className="text-green-600 text-xs mb-1">• Click coordinates to manifest items</p>
+            <p className="text-green-600 text-xs">• Click axis labels to edit them</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
