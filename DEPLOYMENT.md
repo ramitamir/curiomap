@@ -2,7 +2,7 @@
 
 ## Setup (One-Time Only)
 
-### 1. Environment Variables
+### 1. Environment Variables for local debugging
 Your `.env.local` file should contain:
 ```
 GEMINI_API_KEY=your_api_key_here
@@ -15,6 +15,8 @@ Add the same `GEMINI_API_KEY` to Vercel:
 - Set it for Production (and optionally Preview/Development)
 
 ---
+## Deployed URL
+Tha pplication can be found at https://curiomap.vercel.app/
 
 ## Deploying Changes
 
