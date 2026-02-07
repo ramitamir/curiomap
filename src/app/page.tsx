@@ -5,8 +5,22 @@ import { v4 as uuidv4 } from 'uuid';
 import CurioGrid from '@/components/CurioGrid';
 import { Axis, Manifestation } from '@/lib/types';
 import { renderTextWithLinks } from '@/lib/markdown';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import MobilePage from './mobile-page';
 
 export default function Home() {
+  const isMobile = useIsMobile();
+
+  // If mobile, render mobile version
+  if (isMobile) {
+    return <MobilePage />;
+  }
+
+  // Otherwise render desktop version
+  return <DesktopPage />;
+}
+
+function DesktopPage() {
   const [subject, setSubject] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [xAxis, setXAxis] = useState<Axis | null>(null);
@@ -21,6 +35,11 @@ export default function Home() {
   const [hasAxisEdits, setHasAxisEdits] = useState(false);
   const [editingAxis, setEditingAxis] = useState<{ axis: 'x' | 'y'; side: 'min' | 'max' } | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [originalEditValue, setOriginalEditValue] = useState('');
+  const [editedLabels, setEditedLabels] = useState<{
+    xAxis?: { minLabel?: string; maxLabel?: string };
+    yAxis?: { minLabel?: string; maxLabel?: string };
+  }>({});
   const [selectedPoint, setSelectedPoint] = useState<Manifestation | null>(null);
   const [isPlacingItem, setIsPlacingItem] = useState(false);
   const [placementInput, setPlacementInput] = useState('');
@@ -29,6 +48,7 @@ export default function Home() {
   const [subjectGeneratedFrom, setSubjectGeneratedFrom] = useState<string[] | null>(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showAxisTip, setShowAxisTip] = useState(false);
 
   // Terminal bootup sequence
   useEffect(() => {
@@ -80,6 +100,22 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMoreMenu]);
 
+  // Show axis tip on first map load
+  useEffect(() => {
+    if (xAxis && yAxis && !isGeneratingAxes) {
+      const hasSeenTip = localStorage.getItem('hasSeenAxisTip');
+      if (!hasSeenTip) {
+        setShowAxisTip(true);
+        // Auto-dismiss after 5 seconds
+        const timer = setTimeout(() => {
+          setShowAxisTip(false);
+          localStorage.setItem('hasSeenAxisTip', 'true');
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [xAxis, yAxis, isGeneratingAxes]);
+
   const handleGenerateAxes = async (subjectText: string, providedXAxis?: Partial<Axis>, providedYAxis?: Partial<Axis>) => {
     // Clear old data immediately
     setManifestations([]);
@@ -108,6 +144,7 @@ export default function Home() {
       setXAxis(data.xAxis);
       setYAxis(data.yAxis);
       setSubject(subjectText);
+      setEditedLabels({}); // Clear edited labels after successful generation
     } catch (err) {
       setError('>> ERROR: AXIS GENERATION FAILED. RETRY?');
       console.error(err);
@@ -264,7 +301,7 @@ export default function Home() {
   };
 
   const handleCoordinateClick = async (x: number, y: number) => {
-    if (!xAxis || !yAxis || isGeneratingItem) return;
+    if (!xAxis || !yAxis || isGeneratingItem || hasAxisEdits) return;
 
     setIsGeneratingItem(true);
     setError(null);
@@ -330,9 +367,13 @@ export default function Home() {
     if (axis === 'x' && xAxis) {
       setXAxis({ ...xAxis, ...updates });
       setHasAxisEdits(true);
+      setManifestations([]); // Clear items - they were placed with old axes
+      setSelectedPoint(null);
     } else if (axis === 'y' && yAxis) {
       setYAxis({ ...yAxis, ...updates });
       setHasAxisEdits(true);
+      setManifestations([]); // Clear items - they were placed with old axes
+      setSelectedPoint(null);
     }
   };
 
@@ -351,11 +392,14 @@ export default function Home() {
     setItemSeeds(['', '', '']);
     setSubjectGeneratedFrom(null);
     setShowMoreMenu(false);
+    setEditedLabels({});
   };
 
   const handleRegenerate = () => {
     if (!xAxis || !yAxis) return;
-    handleGenerateAxes(subject, xAxis, yAxis);
+    // Only pass the edited labels, not the full axis objects
+    handleGenerateAxes(subject, editedLabels.xAxis || {}, editedLabels.yAxis || {});
+    setEditedLabels({}); // Clear after regeneration
   };
 
   const startEditingAxis = (axis: 'x' | 'y', side: 'min' | 'max') => {
@@ -363,6 +407,7 @@ export default function Home() {
       ? (side === 'min' ? xAxis?.minLabel : xAxis?.maxLabel)
       : (side === 'min' ? yAxis?.minLabel : yAxis?.maxLabel);
     setEditValue(currentValue || '');
+    setOriginalEditValue(currentValue || '');
     setEditingAxis({ axis, side });
   };
 
@@ -372,11 +417,26 @@ export default function Home() {
       return;
     }
 
-    const updates = editingAxis.side === 'min'
-      ? { minLabel: editValue.trim() }
-      : { maxLabel: editValue.trim() };
+    const trimmedValue = editValue.trim();
 
-    handleAxisUpdate(editingAxis.axis, updates);
+    // Only update if value actually changed
+    if (trimmedValue !== originalEditValue) {
+      const updates = editingAxis.side === 'min'
+        ? { minLabel: trimmedValue }
+        : { maxLabel: trimmedValue };
+
+      handleAxisUpdate(editingAxis.axis, updates);
+
+      // Track which specific label was edited
+      setEditedLabels(prev => ({
+        ...prev,
+        [editingAxis.axis === 'x' ? 'xAxis' : 'yAxis']: {
+          ...prev[editingAxis.axis === 'x' ? 'xAxis' : 'yAxis'],
+          [editingAxis.side === 'min' ? 'minLabel' : 'maxLabel']: trimmedValue
+        }
+      }));
+    }
+
     setEditingAxis(null);
   };
 
@@ -574,22 +634,41 @@ export default function Home() {
 
             {/* Edit input overlay (only shown when editing) */}
             {editingAxis && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="pointer-events-auto">
+              <div className="absolute inset-0 bg-black bg-opacity-95 z-[60] flex items-center justify-center p-4">
+                <div className="w-full max-w-md">
+                  <div className="text-green-500 text-xs glow mb-3 text-center leading-relaxed">
+                    EDIT AXIS LABEL: Modify the label text. This label will be preserved. After saving, use [REDO BOARD] to regenerate items with your custom axes.
+                  </div>
                   <input
                     type="text"
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={saveAxisEdit}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') saveAxisEdit();
+                      if (e.key === 'Enter' && editValue.trim()) saveAxisEdit();
                       if (e.key === 'Escape') setEditingAxis(null);
                     }}
-                    className="bg-black border-2 border-green-500 text-green-500 px-4 py-2 text-base"
+                    className="w-full bg-black border border-green-900 text-green-500 px-4 py-3 text-base mb-4"
                     style={{ fontFamily: '"Courier New", monospace' }}
                     autoFocus
                     placeholder="Enter label..."
                   />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveAxisEdit}
+                      disabled={!editValue.trim()}
+                      className="flex-1 bg-green-900 text-green-500 px-4 py-3 hover:bg-green-800 disabled:opacity-50 glow text-sm"
+                      style={{ fontFamily: '"Courier New", monospace' }}
+                    >
+                      [SAVE]
+                    </button>
+                    <button
+                      onClick={() => setEditingAxis(null)}
+                      className="flex-1 bg-black border border-green-900 text-green-500 px-4 py-3 hover:border-green-700 glow text-sm"
+                      style={{ fontFamily: '"Courier New", monospace' }}
+                    >
+                      [CANCEL]
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -637,6 +716,26 @@ export default function Home() {
                       [CANCEL]
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Axis tip banner - first time only */}
+            {showAxisTip && subject && (
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-950 border border-green-500 p-3 z-30 animate-pulse max-w-md">
+                <div className="flex items-center justify-between">
+                  <p className="text-green-400 text-xs font-mono flex-1">
+                    TIP: CLICK AXIS LABELS TO EDIT THEM
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowAxisTip(false);
+                      localStorage.setItem('hasSeenAxisTip', 'true');
+                    }}
+                    className="text-green-500 hover:text-green-300 text-xs ml-4"
+                  >
+                    [OK]
+                  </button>
                 </div>
               </div>
             )}
@@ -790,8 +889,8 @@ export default function Home() {
               <div className="flex gap-2 mt-3 flex-wrap">
                 <button
                   onClick={() => setIsPlacingItem(true)}
-                  className="text-green-500 hover:text-green-300 cursor-pointer text-xs"
-                  disabled={isGeneratingItem || isGeneratingAxes}
+                  className="text-green-500 hover:text-green-300 cursor-pointer text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isGeneratingItem || isGeneratingAxes || hasAxisEdits}
                 >
                   [PLACE]
                 </button>
@@ -852,27 +951,16 @@ export default function Home() {
             </div>
           ) : selectedPoint ? (
             <div>
-              <div className="mb-3 flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-green-500 font-bold text-lg glow mb-1">
-                    {selectedPoint.name}
-                    {selectedPoint.isImpossible && (
-                      <span className="ml-2 text-xs text-red-500">[IMPOSSIBLE]</span>
-                    )}
-                  </h3>
-                  <p className="text-green-400 text-sm">
-                    COORDS: ({selectedPoint.x}, {selectedPoint.y})
-                  </p>
-                </div>
-                {!selectedPoint.isImpossible && (
-                  <button
-                    onClick={() => handleDeleteItem(selectedPoint.id)}
-                    className="text-red-500 hover:text-red-400 text-xs cursor-pointer ml-2"
-                    title="Delete this item"
-                  >
-                    [DELETE]
-                  </button>
-                )}
+              <div className="mb-3">
+                <h3 className="text-green-500 font-bold text-lg glow mb-1">
+                  {selectedPoint.name}
+                  {selectedPoint.isImpossible && (
+                    <span className="ml-2 text-xs text-red-500">[IMPOSSIBLE]</span>
+                  )}
+                </h3>
+                <p className="text-green-400 text-sm">
+                  COORDS: ({selectedPoint.x}, {selectedPoint.y})
+                </p>
               </div>
 
               {/* Show explanation for impossible coords, description otherwise */}
@@ -885,12 +973,21 @@ export default function Home() {
                   <p className="text-green-300 text-sm leading-relaxed mb-4">
                     {renderTextWithLinks(selectedPoint.description)}
                   </p>
-                  <details className="text-xs text-green-600">
-                    <summary className="cursor-pointer hover:text-green-400">[REASONING]</summary>
-                    <p className="mt-2 pl-2 border-l border-green-800 text-green-500">
-                      {renderTextWithLinks(selectedPoint.reasoning)}
-                    </p>
-                  </details>
+                  <div className="flex items-start justify-between">
+                    <details className="text-xs text-green-600 flex-1">
+                      <summary className="cursor-pointer hover:text-green-400">[REASONING]</summary>
+                      <p className="mt-2 pl-2 border-l border-green-800 text-green-500">
+                        {renderTextWithLinks(selectedPoint.reasoning)}
+                      </p>
+                    </details>
+                    <button
+                      onClick={() => handleDeleteItem(selectedPoint.id)}
+                      className="text-red-500 hover:text-red-400 text-xs cursor-pointer ml-4"
+                      title="Delete this item"
+                    >
+                      [DELETE]
+                    </button>
+                  </div>
                 </>
               )}
             </div>

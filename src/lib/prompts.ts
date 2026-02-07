@@ -47,6 +47,32 @@ export function buildAxisGenerationPrompt(
   xAxis: Partial<Axis>,
   yAxis: Partial<Axis>
 ): string {
+  // Build explicit instructions for each axis
+  let xAxisInstructions = '';
+  let yAxisInstructions = '';
+
+  // X-Axis instructions
+  if (xAxis.minLabel && xAxis.maxLabel) {
+    xAxisInstructions = `X-Axis: Both labels provided by user. Use EXACTLY: minLabel="${xAxis.minLabel}", maxLabel="${xAxis.maxLabel}"`;
+  } else if (xAxis.minLabel && !xAxis.maxLabel) {
+    xAxisInstructions = `X-Axis: User provided minLabel="${xAxis.minLabel}". You MUST keep this exactly. Generate a semantically OPPOSITE maxLabel that contrasts with "${xAxis.minLabel}".`;
+  } else if (!xAxis.minLabel && xAxis.maxLabel) {
+    xAxisInstructions = `X-Axis: User provided maxLabel="${xAxis.maxLabel}". You MUST keep this exactly. Generate a semantically OPPOSITE minLabel that contrasts with "${xAxis.maxLabel}".`;
+  } else {
+    xAxisInstructions = `X-Axis: No labels provided. Generate both minLabel and maxLabel according to the axis criteria.`;
+  }
+
+  // Y-Axis instructions
+  if (yAxis.minLabel && yAxis.maxLabel) {
+    yAxisInstructions = `Y-Axis: Both labels provided by user. Use EXACTLY: minLabel="${yAxis.minLabel}", maxLabel="${yAxis.maxLabel}"`;
+  } else if (yAxis.minLabel && !yAxis.maxLabel) {
+    yAxisInstructions = `Y-Axis: User provided minLabel="${yAxis.minLabel}". You MUST keep this exactly. Generate a semantically OPPOSITE maxLabel that contrasts with "${yAxis.minLabel}".`;
+  } else if (!yAxis.minLabel && yAxis.maxLabel) {
+    yAxisInstructions = `Y-Axis: User provided maxLabel="${yAxis.maxLabel}". You MUST keep this exactly. Generate a semantically OPPOSITE minLabel that contrasts with "${yAxis.maxLabel}".`;
+  } else {
+    yAxisInstructions = `Y-Axis: No labels provided. Generate both minLabel and maxLabel according to the axis criteria.`;
+  }
+
   return `You are the Dimensional Architect for 'Curio Space.'
 
 MISSION: Given a 'Subject,' identify two distinct, high-contrast dimensions (X and Y axes) that create a rich, 2D conceptual map for exploration.
@@ -59,11 +85,18 @@ AXIS CRITERIA:
 
 SUBJECT: ${subject}
 
-User has provided:
-- X-Axis: ${JSON.stringify(xAxis)}
-- Y-Axis: ${JSON.stringify(yAxis)}
+INSTRUCTIONS:
+${xAxisInstructions}
+${yAxisInstructions}
 
-Fill in ONLY the null/missing fields. Keep user-provided values exactly as given.
+EXAMPLES OF SEMANTIC OPPOSITES:
+- "Open source" ↔ "Proprietary" or "Closed source"
+- "Ancient" ↔ "Modern" or "Contemporary"
+- "Minimalist" ↔ "Feature-rich" or "Maximalist"
+- "Privacy-focused" ↔ "Data-driven" or "Surveillance-heavy"
+- "Lightweight" ↔ "Heavy" or "Resource-intensive"
+
+The opposite must create meaningful contrast and be contextually appropriate to the subject.
 
 IMPORTANT: Return ONLY valid JSON, no markdown, no code blocks, no extra text.
 

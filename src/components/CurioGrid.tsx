@@ -12,6 +12,7 @@ interface CurioGridProps {
   onLabelClick?: (axis: 'x' | 'y', side: 'min' | 'max') => void;
   selectedPointId?: string;
   onPointSelect: (point: Manifestation | null) => void;
+  isMobile?: boolean;
 }
 
 export default function CurioGrid({
@@ -22,6 +23,7 @@ export default function CurioGrid({
   onLabelClick,
   selectedPointId,
   onPointSelect,
+  isMobile = false,
 }: CurioGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -296,32 +298,34 @@ export default function CurioGrid({
         {/* HTML axis labels overlaid on canvas */}
         {canvasSize.width > 0 && (
           <>
-            {/* X-axis min label (left) */}
+            {/* X-axis min label (left) - rotated 90° counterclockwise */}
             <div
               className="absolute text-green-500 text-sm cursor-text hover:opacity-70 pointer-events-auto"
               style={{
-                left: '10px',
-                top: `${canvasCenter.y + 25}px`,
+                left: '5px',
+                top: '50%',
                 fontFamily: '"Courier New", monospace',
-                maxWidth: `${PADDING - 20}px`,
+                transform: 'translateY(-50%) rotate(-90deg)',
+                whiteSpace: 'nowrap',
               }}
               onClick={() => onLabelClick?.('x', 'min')}
             >
-              [-] {xAxis.minLabel}
+              {xAxis.minLabel}{isMobile && ' [✎]'}
             </div>
 
-            {/* X-axis max label (right) */}
+            {/* X-axis max label (right) - rotated 90° clockwise */}
             <div
-              className="absolute text-green-500 text-sm cursor-text hover:opacity-70 text-right pointer-events-auto"
+              className="absolute text-green-500 text-sm cursor-text hover:opacity-70 pointer-events-auto"
               style={{
-                right: '10px',
-                top: `${canvasCenter.y + 25}px`,
+                right: '5px',
+                top: '50%',
                 fontFamily: '"Courier New", monospace',
-                maxWidth: `${PADDING - 20}px`,
+                transform: 'translateY(-50%) rotate(90deg)',
+                whiteSpace: 'nowrap',
               }}
               onClick={() => onLabelClick?.('x', 'max')}
             >
-              [+] {xAxis.maxLabel}
+              {xAxis.maxLabel}{isMobile && ' [✎]'}
             </div>
 
             {/* Y-axis max label (top) */}
@@ -330,13 +334,13 @@ export default function CurioGrid({
               style={{
                 left: '50%',
                 transform: 'translateX(-50%)',
-                top: `${PADDING - 20}px`,
+                top: `${PADDING - 35}px`,
                 fontFamily: '"Courier New", monospace',
                 maxWidth: '200px',
               }}
               onClick={() => onLabelClick?.('y', 'max')}
             >
-              [+] {yAxis.maxLabel}
+              {yAxis.maxLabel}{isMobile && ' [✎]'}
             </div>
 
             {/* Y-axis min label (bottom) */}
@@ -345,13 +349,13 @@ export default function CurioGrid({
               style={{
                 left: '50%',
                 transform: 'translateX(-50%)',
-                bottom: `${PADDING - 55}px`,
+                bottom: `${PADDING - 70}px`,
                 fontFamily: '"Courier New", monospace',
                 maxWidth: '200px',
               }}
               onClick={() => onLabelClick?.('y', 'min')}
             >
-              [-] {yAxis.minLabel}
+              {yAxis.minLabel}{isMobile && ' [✎]'}
             </div>
           </>
         )}

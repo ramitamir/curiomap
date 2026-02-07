@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide Next.js dev indicator */
+#__next-build-watcher,
+[data-nextjs-toast-wrapper],
+nextjs-portal {
+  display: none !important;
+}
+
+/* Hide all dev indicators */
+div[style*="position: fixed"][style*="bottom"][style*="left"] {
+  display: none !important;
+}
+
 :root {
   --terminal-bg: #0a0e0a;
   --terminal-green: #00ff41;
