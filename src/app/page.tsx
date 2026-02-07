@@ -634,7 +634,7 @@ function DesktopPage() {
 
             {/* Edit input overlay (only shown when editing) */}
             {editingAxis && (
-              <div className="absolute inset-0 bg-black bg-opacity-95 z-[60] flex items-center justify-center p-4">
+              <div className="absolute inset-0 overlay-dark z-[60] flex items-center justify-center p-4">
                 <div className="w-full max-w-md">
                   <div className="text-green-500 text-xs glow mb-3 text-center leading-relaxed">
                     EDIT AXIS LABEL: Modify the label text. This label will be preserved. After saving, use [REDO BOARD] to regenerate items with your custom axes.
@@ -722,7 +722,7 @@ function DesktopPage() {
 
             {/* Axis tip banner - first time only */}
             {showAxisTip && subject && (
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-950 border border-green-500 p-3 z-30 animate-pulse max-w-md">
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black border border-green-500 p-3 z-30 animate-pulse max-w-md">
                 <div className="flex items-center justify-between">
                   <p className="text-green-400 text-xs font-mono flex-1">
                     TIP: CLICK AXIS LABELS TO EDIT THEM
@@ -744,13 +744,13 @@ function DesktopPage() {
       </div>
 
       {/* Right: Sidebar */}
-      <div className="w-96 bg-black border-l border-green-900 flex flex-col overflow-hidden">
+      <div className="w-96 bg-white border border-black flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-green-900">
           {!subject ? (
             <div>
               <div className="text-green-500 text-xs glow mb-3">
-                CURIO.SPACE // NEURAL CARTOGRAPHY SYSTEM v1.0
+                CURIO.SPACE // NEURAL CARTOGRAPHY SYSTEM v1.0!
               </div>
 
               {inputMode === 'subject' ? (
@@ -1025,8 +1025,8 @@ function DesktopPage() {
 
       {/* Help Modal */}
       {showHelp && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-          <div className="bg-black border-2 border-green-500 p-6 max-w-md mx-4">
+        <div className="fixed inset-0 overlay-dark flex items-center justify-center z-50">
+          <div className="bg-white border-2 border-black p-6 max-w-md mx-4">
             <div className="text-green-500 text-lg glow mb-4">
               // CURIO SPACE
             </div>

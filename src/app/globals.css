@@ -24,15 +24,15 @@ div[style*="position: fixed"][style*="bottom"][style*="left"] {
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--terminal-bg);
-  color: var(--terminal-green);
+  background-color: #F7F3F2;
+  color: #000000;
   font-family: 'Courier New', Courier, monospace;
   overflow: hidden;
   position: relative;
 }
 
 /* CRT scanline effect */
-body::before {
+body.terminal::before {
   content: '';
   position: fixed;
   top: 0;
@@ -57,7 +57,7 @@ body::before {
   100% { opacity: 0.97; }
 }
 
-body::after {
+body.terminal::after {
   content: '';
   position: fixed;
   top: 0;
@@ -95,4 +95,88 @@ input:focus {
   box-shadow: none;
   outline: none;
   border: none;
+}
+
+/* Light theme overrides */
+.modern .text-green-500,
+.modern .text-green-400,
+.modern .text-green-300,
+.modern .text-green-600,
+.modern .text-green-700 {
+  color: #000000 !important;
+}
+
+.modern [class*="text-green-"] {
+  color: #000000 !important;
+}
+
+.modern .bg-black {
+  background-color: #FFFFFF !important;
+}
+
+.modern [class*="bg-green-"] {
+  background-color: #000000 !important;
+  color: #ffffff !important; /* ensure contrast on dark bg */
+}
+
+.modern [class*="hover:bg-green-"]:hover {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.modern [class*="hover:text-green-"]:hover {
+  color: #000000 !important;
+}
+
+.modern .border-green-900,
+.modern .border-green-800,
+.modern .border-green-700,
+.modern .border-green-500 {
+  border-color: #000000 !important;
+}
+
+.modern [class*="border-green-"] {
+  border-color: #000000 !important;
+}
+
+.modern .glow {
+  text-shadow: none !important;
+}
+
+/* Placeholder color (was placeholder-green-800 in places) */
+.modern ::placeholder {
+  color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Dark overlay utility for modals/overlays in modern theme */
+.modern .overlay-dark {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+.modern .overlay-dark .text-green-500,
+.modern .overlay-dark .text-green-400,
+.modern .overlay-dark .text-green-300,
+.modern .overlay-dark .text-green-600,
+.modern .overlay-dark .text-green-700 {
+  color: #ffffff !important;
+}
+.modern .overlay-dark [class*="border-green-"] {
+  border-color: #ffffff !important;
+}
+.modern .overlay-dark .bg-black {
+  background-color: #000000 !important;
+}
+.modern .overlay-dark ::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Ensure readable text on white cards inside dark overlays */
+.modern .overlay-dark .bg-white [class*="text-green-"] {
+  color: #000000 !important;
+}
+.modern .overlay-dark .bg-white [class*="border-green-"] {
+  border-color: #000000 !important;
+}
+/* CTA in white cards should keep white text on black bg */
+.modern .overlay-dark .bg-white [class*="bg-green-"][class*="text-green-"] {
+  color: #ffffff !important;
 }

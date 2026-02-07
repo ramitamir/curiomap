@@ -70,16 +70,16 @@ export default function CurioGrid({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear with terminal background
-    ctx.fillStyle = '#0a0e0a';
+    // Clear with light background
+    ctx.fillStyle = '#F7F3F2';
     ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-    const green = '#00ff41';
-    const dimGreen = '#00aa2e';
-    const fadedGreen = '#004411'; // Very faded for axes
+    const black = '#000000';
+    const dimBlack = 'rgba(0, 0, 0, 0.6)';
+    const fadedBlack = 'rgba(0, 0, 0, 0.2)'; // Very faded for axes
 
     // Draw axes (faded)
-    ctx.strokeStyle = fadedGreen;
+    ctx.strokeStyle = fadedBlack;
     ctx.lineWidth = 1;
 
     // X-axis
@@ -95,7 +95,7 @@ export default function CurioGrid({
     ctx.stroke();
 
     // Draw corner markers for extremes (L-shaped brackets)
-    ctx.strokeStyle = dimGreen;
+    ctx.strokeStyle = dimBlack;
     ctx.lineWidth = 2;
     const cornerSize = 10;
 
@@ -142,7 +142,7 @@ export default function CurioGrid({
       // Check if impossible coordinate
       if (m.isImpossible) {
         // Draw X mark instead of circle
-        ctx.strokeStyle = green;
+        ctx.strokeStyle = black;
         ctx.lineWidth = 2;
         const size = isSelected ? 10 : 6;
 
@@ -159,7 +159,7 @@ export default function CurioGrid({
 
         // Glow effect for selection
         if (isSelected || isHovered) {
-          ctx.strokeStyle = 'rgba(0, 255, 65, 0.5)';
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
           ctx.lineWidth = 3;
           ctx.stroke();
         }
@@ -167,7 +167,7 @@ export default function CurioGrid({
         // Show "IMPOSSIBLE" text only on hover
         if (isHovered && !isSelected) {
           ctx.font = '12px "Courier New", monospace';
-          ctx.fillStyle = green;
+          ctx.fillStyle = black;
           ctx.textAlign = 'center';
           ctx.fillText('IMPOSSIBLE', pos.x, pos.y - 15);
         }
@@ -175,12 +175,12 @@ export default function CurioGrid({
         // Draw normal circle point
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, isSelected ? 8 : 5, 0, Math.PI * 2);
-        ctx.fillStyle = green;
+        ctx.fillStyle = black;
         ctx.fill();
 
         // Glow effect
         if (isSelected || isHovered) {
-          ctx.strokeStyle = 'rgba(0, 255, 65, 0.5)';
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
           ctx.lineWidth = 3;
           ctx.stroke();
         }
@@ -188,7 +188,7 @@ export default function CurioGrid({
         // Show name only on hover
         if (isHovered && !isSelected) {
           ctx.font = '12px "Courier New", monospace';
-          ctx.fillStyle = green;
+          ctx.fillStyle = black;
           ctx.textAlign = 'center';
           ctx.fillText(m.name, pos.x, pos.y - 15);
         }
