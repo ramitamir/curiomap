@@ -575,7 +575,7 @@ export default function MobilePage() {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col">
+    <div className="fixed inset-0 flex flex-col bg-black">
       {/* Map - full screen */}
       <div className="flex-1 relative">
         {/* Help button when map is empty - centered and large */}
@@ -593,7 +593,7 @@ export default function MobilePage() {
 
         {isGeneratingAxes && (
           <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[60]">
-            <div className="bg-white border-2 border-black p-6 rounded pointer-events-none">
+            <div className="bg-black bg-opacity-90 border-2 border-green-500 p-6 rounded pointer-events-none">
               <p className="text-green-500 text-base animate-pulse glow">
                 GENERATING COORDINATE SYSTEM...
               </p>
@@ -621,7 +621,7 @@ export default function MobilePage() {
 
         {/* Top bar with subject and controls when map is loaded */}
         {subject && (
-          <div className="absolute top-0 left-0 right-0 bg-white border-b border-black p-3 z-10">
+          <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-90 border-b border-green-900 p-3 z-10">
             <div className="text-green-500 text-xs glow mb-1">
               {subject.toUpperCase()}
             </div>
@@ -645,6 +645,7 @@ export default function MobilePage() {
               >
                 [REDO AXES]
               </button>
+              
               <button
                 onClick={handleSaveToFile}
                 className="text-green-500 hover:text-green-300"
@@ -703,7 +704,7 @@ export default function MobilePage() {
         {/* Loading indicator */}
         {isGeneratingItem && (
           <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[60]">
-            <div className="bg-white border-2 border-black p-6 rounded pointer-events-none">
+            <div className="bg-black bg-opacity-90 border-2 border-green-500 p-6 rounded pointer-events-none">
               <p className="text-green-500 text-base animate-pulse glow">
                 MANIFESTING...
               </p>
@@ -720,7 +721,7 @@ export default function MobilePage() {
 
         {/* Edit axis label overlay */}
         {editingAxis && (
-          <div className="absolute inset-0 overlay-dark z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black bg-opacity-95 z-[60] flex items-center justify-center p-4">
             <div className="w-full max-w-md">
               <div className="text-green-500 text-xs glow mb-3 text-center leading-relaxed">
                 EDIT AXIS LABEL: Modify the label text. This label will be preserved. After saving, use [REDO BOARD] to regenerate items with your custom axes.
@@ -761,7 +762,7 @@ export default function MobilePage() {
 
       {/* Place item overlay */}
       {isPlacingItem && (
-        <div className="fixed inset-0 overlay-dark z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md">
             <div className="text-green-500 text-sm glow mb-4 text-center">
               ENTER ITEM TO PLACE:
@@ -810,14 +811,14 @@ export default function MobilePage() {
       {showDrawer && selectedPoint && (
         <>
           <div
-            className="fixed inset-0 overlay-dark z-40"
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
             onClick={() => {
               setShowDrawer(false);
               setDrawerExpanded(false);
             }}
           />
           <div
-            className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black z-50 transition-all duration-300"
+            className="fixed bottom-0 left-0 right-0 bg-black border-t-2 border-green-500 z-50 transition-all duration-300"
             style={{
               maxHeight: drawerExpanded ? '50vh' : 'auto',
             }}
@@ -895,7 +896,7 @@ export default function MobilePage() {
 
       {/* Input overlay */}
       {showInputOverlay && (
-        <div className="fixed inset-0 overlay-dark z-50 flex flex-col p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex flex-col p-4">
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-md">
               <div className="text-green-500 text-sm glow mb-4 text-center">
@@ -1037,8 +1038,8 @@ export default function MobilePage() {
 
       {/* Help Modal */}
       {showHelp && (
-        <div className="fixed inset-0 overlay-dark flex items-center justify-center z-50 p-4">
-          <div className="bg-white border-2 border-black p-6 max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+          <div className="bg-black border-2 border-green-500 p-6 max-w-md">
             <div className="text-green-500 text-lg glow mb-4">
               // CURIO SPACE
             </div>

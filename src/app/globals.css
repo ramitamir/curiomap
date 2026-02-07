@@ -24,15 +24,15 @@ div[style*="position: fixed"][style*="bottom"][style*="left"] {
 body {
   margin: 0;
   padding: 0;
-  background-color: #F7F3F2;
-  color: #000000;
+  background-color: var(--terminal-bg);
+  color: var(--terminal-green);
   font-family: 'Courier New', Courier, monospace;
   overflow: hidden;
   position: relative;
 }
 
 /* CRT scanline effect */
-body.terminal::before {
+body::before {
   content: '';
   position: fixed;
   top: 0;
@@ -57,7 +57,7 @@ body.terminal::before {
   100% { opacity: 0.97; }
 }
 
-body.terminal::after {
+body::after {
   content: '';
   position: fixed;
   top: 0;
@@ -68,6 +68,16 @@ body.terminal::after {
   pointer-events: none;
   z-index: 9998;
   animation: flicker 0.15s infinite;
+}
+
+/* Light theme base */
+.modern {
+  background-color: #F7F3F2;
+  color: #000000;
+}
+body.modern::before,
+body.modern::after {
+  display: none !important;
 }
 
 /* Text glow effect */
@@ -110,13 +120,14 @@ input:focus {
   color: #000000 !important;
 }
 
-.modern .bg-black {
-  background-color: #FFFFFF !important;
-}
-
 .modern [class*="bg-green-"] {
   background-color: #000000 !important;
   color: #ffffff !important; /* ensure contrast on dark bg */
+}
+
+/* Convert black panels with green borders into white cards */
+.modern .bg-black[class*="border-green-"] {
+  background-color: #FFFFFF !important;
 }
 
 .modern [class*="hover:bg-green-"]:hover {
