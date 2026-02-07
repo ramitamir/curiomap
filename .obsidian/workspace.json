@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Prompt.md",
+                "file": "DEPLOYMENT.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Prompt"
+              "title": "DEPLOYMENT"
             }
           }
         ],
@@ -109,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Prompt.md",
+                "file": "DEPLOYMENT.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -119,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Prompt"
+              "title": "Backlinks for DEPLOYMENT"
             }
           },
           {
@@ -128,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Prompt.md",
+                "file": "DEPLOYMENT.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Prompt"
+              "title": "Outgoing links from DEPLOYMENT"
             }
           },
           {
@@ -171,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Prompt.md",
+                "file": "DEPLOYMENT.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Prompt"
+              "title": "Outline of DEPLOYMENT"
             }
           }
         ]
@@ -201,6 +201,7 @@
   "active": "28918930b903f96e",
   "lastOpenFiles": [
     "Readme.md",
+    "DEPLOYMENT.md",
     "Prompt.md",
     "src/app/api/generate-subject-from-items/route.ts",
     "src/app/api/generate-subject-from-items",
@@ -235,7 +236,6 @@
     "node_modules/eslint-visitor-keys/README.md",
     "node_modules/eslint-plugin-react-hooks/README.md",
     "node_modules/cross-spawn/README.md",
-    "node_modules/for-each/README.md",
-    "node_modules/for-each/CHANGELOG.md"
+    "node_modules/for-each/README.md"
   ]
 }

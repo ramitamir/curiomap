@@ -28,6 +28,7 @@ export default function Home() {
   const [itemSeeds, setItemSeeds] = useState<string[]>(['', '', '']);
   const [subjectGeneratedFrom, setSubjectGeneratedFrom] = useState<string[] | null>(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Terminal bootup sequence
   useEffect(() => {
@@ -533,6 +534,19 @@ export default function Home() {
     <div className="fixed inset-0 flex flex-row">
       {/* Left: Map */}
       <div className="flex-1 relative">
+        {/* Help button when map is empty - centered and large */}
+        {!subject && !isGeneratingAxes && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <button
+              onClick={() => setShowHelp(true)}
+              className="w-20 h-20 rounded-full border-2 border-green-700 text-green-500 hover:text-green-300 hover:border-green-500 flex items-center justify-center text-4xl glow"
+              title="Help"
+            >
+              ?
+            </button>
+          </div>
+        )}
+
         {isGeneratingAxes && (
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="text-green-500 text-sm animate-pulse glow">
@@ -738,6 +752,9 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
+                  <div className="text-green-700 text-xs mb-3 italic">
+                    AI will find the hidden thread connecting these items
+                  </div>
                   <div className="flex justify-between">
                     <button
                       onClick={() => setInputMode('subject')}
@@ -896,7 +913,47 @@ export default function Home() {
             <p className="text-green-600 text-xs">• Click axis labels to edit them</p>
           </div>
         )}
+
+        {/* Help button - bottom right when map is loaded */}
+        {subject && (
+          <button
+            onClick={() => setShowHelp(true)}
+            className="absolute bottom-4 right-4 w-8 h-8 rounded-full border border-green-700 text-green-500 hover:text-green-300 hover:border-green-500 flex items-center justify-center text-sm"
+            title="Help"
+          >
+            ?
+          </button>
+        )}
       </div>
+
+      {/* Help Modal */}
+      {showHelp && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+          <div className="bg-black border-2 border-green-500 p-6 max-w-md mx-4">
+            <div className="text-green-500 text-lg glow mb-4">
+              // CURIO SPACE
+            </div>
+            <div className="text-green-400 text-sm space-y-3 mb-6 leading-relaxed">
+              <p>Navigate the hidden undercurrent of AI thought.</p>
+              <p className="text-green-500">
+                Each subject becomes a 2D map of conceptual possibilities.
+                The AI reveals how it organizes and connects ideas—
+                sometimes logical, sometimes surprising, always unique.
+              </p>
+              <p className="text-green-300">
+                Click. Discover. See how the machine thinks.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowHelp(false)}
+              className="w-full py-2 bg-green-900 text-green-500 hover:bg-green-800 glow text-xs"
+              style={{ fontFamily: '"Courier New", monospace' }}
+            >
+              [CLOSE]
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
