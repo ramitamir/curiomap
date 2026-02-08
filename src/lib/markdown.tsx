@@ -3,7 +3,7 @@ import React from 'react';
 /**
  * Renders text with markdown-style links [text](url) as clickable links
  */
-export function renderTextWithLinks(text: string): React.ReactNode {
+export function renderTextWithLinks(text: string, theme: 'terminal' | 'modern' = 'terminal'): React.ReactNode {
   if (!text) return text;
 
   // Regex to match markdown links: [text](url)
@@ -12,6 +12,10 @@ export function renderTextWithLinks(text: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match;
+
+  const linkClasses = theme === 'modern'
+    ? 'text-[#4A4A4A] hover:text-[#2C2C2C] underline'
+    : 'text-green-400 hover:text-green-300 underline glow';
 
   while ((match = linkRegex.exec(text)) !== null) {
     const [fullMatch, linkText, url] = match;
@@ -29,7 +33,7 @@ export function renderTextWithLinks(text: string): React.ReactNode {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-green-400 hover:text-green-300 underline glow"
+        className={linkClasses}
       >
         {linkText}
       </a>

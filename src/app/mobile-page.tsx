@@ -5,8 +5,11 @@ import { v4 as uuidv4 } from 'uuid';
 import CurioGrid from '@/components/CurioGrid';
 import { Axis, Manifestation } from '@/lib/types';
 import { renderTextWithLinks } from '@/lib/markdown';
+import { useTheme } from '@/contexts/ThemeContext';
+import ThemeToggleButton from '@/components/ThemeToggleButton';
 
 export default function MobilePage() {
+  const { theme } = useTheme();
   const [subject, setSubject] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [xAxis, setXAxis] = useState<Axis | null>(null);
@@ -567,7 +570,9 @@ export default function MobilePage() {
   if (!bootupComplete) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
-        <pre className="text-green-500 text-sm whitespace-pre-wrap glow">
+        <pre className={`text-sm whitespace-pre-wrap glow ${
+          theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+        }`}>
           {bootupText}<span className="blink-cursor">█</span>
         </pre>
       </div>
@@ -575,7 +580,9 @@ export default function MobilePage() {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-black">
+    <div className={`fixed inset-0 flex flex-col ${
+      theme === 'modern' ? 'bg-[#F7F3F2]' : 'bg-black'
+    }`}>
       {/* Map - full screen */}
       <div className="flex-1 relative">
         {/* Help button when map is empty - centered and large */}
@@ -593,8 +600,14 @@ export default function MobilePage() {
 
         {isGeneratingAxes && (
           <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[60]">
-            <div className="bg-black bg-opacity-90 border-2 border-green-500 p-6 rounded pointer-events-none">
-              <p className="text-green-500 text-base animate-pulse glow">
+            <div className={`bg-opacity-90 border-2 p-6 rounded pointer-events-none ${
+              theme === 'modern'
+                ? 'bg-[#F7F3F2] border-[#666666]'
+                : 'bg-black border-green-500'
+            }`}>
+              <p className={`text-base animate-pulse glow ${
+                theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+              }`}>
                 GENERATING COORDINATE SYSTEM...
               </p>
             </div>
@@ -621,45 +634,72 @@ export default function MobilePage() {
 
         {/* Top bar with subject and controls when map is loaded */}
         {subject && (
-          <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-90 border-b border-green-900 p-3 z-10">
-            <div className="text-green-500 text-xs glow mb-1">
-              {subject.toUpperCase()}
+          <div className={`absolute top-0 left-0 right-0 bg-opacity-90 border-b p-3 z-10 ${
+            theme === 'modern'
+              ? 'bg-[#F7F3F2] border-[#666666]'
+              : 'bg-black border-green-900'
+          }`}>
+            <div className={`flex items-center justify-between mb-1 ${
+              theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+            }`}>
+              <div className="text-xs glow">
+                {subject.toUpperCase()}
+              </div>
+              <ThemeToggleButton />
             </div>
             {subjectGeneratedFrom && (
-              <div className="text-green-700 text-xs mb-2">
+              <div className={`text-xs mb-2 ${
+                theme === 'modern' ? 'text-[#4A4A4A]' : 'text-green-700'
+              }`}>
                 [From: {subjectGeneratedFrom.join(', ')}]
               </div>
             )}
             <div className="flex gap-2 text-xs flex-wrap">
               <button
                 onClick={() => setIsPlacingItem(true)}
-                className="text-green-500 hover:text-green-300 disabled:opacity-50"
+                className={`disabled:opacity-50 ${
+                  theme === 'modern'
+                    ? 'text-[#2C2C2C] hover:text-[#4A4A4A]'
+                    : 'text-green-500 hover:text-green-300'
+                }`}
                 disabled={isGeneratingItem || hasAxisEdits}
               >
                 [PLACE]
               </button>
               <button
                 onClick={() => handleGenerateAxes(subject)}
-                className="text-green-500 hover:text-green-300"
+                className={theme === 'modern'
+                  ? 'text-[#2C2C2C] hover:text-[#4A4A4A]'
+                  : 'text-green-500 hover:text-green-300'
+                }
                 disabled={isGeneratingAxes}
               >
                 [REDO AXES]
               </button>
               <button
                 onClick={handleSaveToFile}
-                className="text-green-500 hover:text-green-300"
+                className={theme === 'modern'
+                  ? 'text-[#2C2C2C] hover:text-[#4A4A4A]'
+                  : 'text-green-500 hover:text-green-300'
+                }
               >
                 [SAVE]
               </button>
               <button
                 onClick={handleReset}
-                className="text-green-500 hover:text-green-300"
+                className={theme === 'modern'
+                  ? 'text-[#2C2C2C] hover:text-[#4A4A4A]'
+                  : 'text-green-500 hover:text-green-300'
+                }
               >
                 [NEW]
               </button>
               <button
                 onClick={() => setShowHelp(true)}
-                className="text-green-500 hover:text-green-300"
+                className={theme === 'modern'
+                  ? 'text-[#2C2C2C] hover:text-[#4A4A4A]'
+                  : 'text-green-500 hover:text-green-300'
+                }
               >
                 [?]
               </button>
@@ -703,8 +743,14 @@ export default function MobilePage() {
         {/* Loading indicator */}
         {isGeneratingItem && (
           <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[60]">
-            <div className="bg-black bg-opacity-90 border-2 border-green-500 p-6 rounded pointer-events-none">
-              <p className="text-green-500 text-base animate-pulse glow">
+            <div className={`bg-opacity-90 border-2 p-6 rounded pointer-events-none ${
+              theme === 'modern'
+                ? 'bg-[#F7F3F2] border-[#666666]'
+                : 'bg-black border-green-500'
+            }`}>
+              <p className={`text-base animate-pulse glow ${
+                theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+              }`}>
                 MANIFESTING...
               </p>
             </div>
@@ -720,9 +766,13 @@ export default function MobilePage() {
 
         {/* Edit axis label overlay */}
         {editingAxis && (
-          <div className="absolute inset-0 bg-black bg-opacity-95 z-[60] flex items-center justify-center p-4">
+          <div className={`absolute inset-0 bg-opacity-95 z-[60] flex items-center justify-center p-4 ${
+            theme === 'modern' ? 'bg-[#F7F3F2]' : 'bg-black'
+          }`}>
             <div className="w-full max-w-md">
-              <div className="text-green-500 text-xs glow mb-3 text-center leading-relaxed">
+              <div className={`text-xs glow mb-3 text-center leading-relaxed ${
+                theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+              }`}>
                 EDIT AXIS LABEL: Modify the label text. This label will be preserved. After saving, use [REDO BOARD] to regenerate items with your custom axes.
               </div>
               <input
@@ -733,7 +783,11 @@ export default function MobilePage() {
                   if (e.key === 'Enter' && editValue.trim()) saveAxisEdit();
                   if (e.key === 'Escape') setEditingAxis(null);
                 }}
-                className="w-full bg-black border border-green-900 text-green-500 px-4 py-3 text-base mb-4"
+                className={`w-full border px-4 py-3 text-base mb-4 ${
+                  theme === 'modern'
+                    ? 'bg-[#F7F3F2] border-[#666666] text-[#2C2C2C]'
+                    : 'bg-black border-green-900 text-green-500'
+                }`}
                 style={{ fontFamily: '"Courier New", monospace' }}
                 autoFocus
               />
@@ -741,14 +795,22 @@ export default function MobilePage() {
                 <button
                   onClick={saveAxisEdit}
                   disabled={!editValue.trim()}
-                  className="flex-1 bg-green-900 text-green-500 px-4 py-3 hover:bg-green-800 disabled:opacity-50 glow text-sm"
+                  className={`flex-1 px-4 py-3 disabled:opacity-50 glow text-sm ${
+                    theme === 'modern'
+                      ? 'bg-[#4A4A4A] text-[#F7F3F2] hover:bg-[#1A1A1A]'
+                      : 'bg-green-900 text-green-500 hover:bg-green-800'
+                  }`}
                   style={{ fontFamily: '"Courier New", monospace' }}
                 >
                   [SAVE]
                 </button>
                 <button
                   onClick={() => setEditingAxis(null)}
-                  className="flex-1 bg-black border border-green-900 text-green-500 px-4 py-3 hover:border-green-700 glow text-sm"
+                  className={`flex-1 border px-4 py-3 glow text-sm ${
+                    theme === 'modern'
+                      ? 'bg-[#F7F3F2] border-[#666666] text-[#2C2C2C] hover:border-[#1A1A1A]'
+                      : 'bg-black border-green-900 text-green-500 hover:border-green-700'
+                  }`}
                   style={{ fontFamily: '"Courier New", monospace' }}
                 >
                   [CANCEL]
@@ -761,9 +823,13 @@ export default function MobilePage() {
 
       {/* Place item overlay */}
       {isPlacingItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4">
+        <div className={`fixed inset-0 bg-opacity-95 z-50 flex items-center justify-center p-4 ${
+          theme === 'modern' ? 'bg-[#F7F3F2]' : 'bg-black'
+        }`}>
           <div className="w-full max-w-md">
-            <div className="text-green-500 text-sm glow mb-4 text-center">
+            <div className={`text-sm glow mb-4 text-center ${
+              theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+            }`}>
               ENTER ITEM TO PLACE:
             </div>
             <input
@@ -777,7 +843,11 @@ export default function MobilePage() {
                   setPlacementInput('');
                 }
               }}
-              className="w-full bg-black border border-green-900 text-green-500 px-4 py-3 text-base mb-4"
+              className={`w-full border px-4 py-3 text-base mb-4 ${
+                theme === 'modern'
+                  ? 'bg-[#F7F3F2] border-[#666666] text-[#2C2C2C] placeholder-[#999999]'
+                  : 'bg-black border-green-900 text-green-500'
+              }`}
               style={{ fontFamily: '"Courier New", monospace' }}
               autoFocus
               placeholder="e.g., Tokyo Metro..."
@@ -786,7 +856,11 @@ export default function MobilePage() {
               <button
                 onClick={handlePlaceItem}
                 disabled={!placementInput.trim()}
-                className="flex-1 bg-green-900 text-green-500 px-4 py-3 hover:bg-green-800 disabled:opacity-50 glow text-sm"
+                className={`flex-1 px-4 py-3 disabled:opacity-50 glow text-sm ${
+                  theme === 'modern'
+                    ? 'bg-[#4A4A4A] text-[#F7F3F2] hover:bg-[#1A1A1A]'
+                    : 'bg-green-900 text-green-500 hover:bg-green-800'
+                }`}
                 style={{ fontFamily: '"Courier New", monospace' }}
               >
                 [PLACE]
@@ -796,7 +870,11 @@ export default function MobilePage() {
                   setIsPlacingItem(false);
                   setPlacementInput('');
                 }}
-                className="flex-1 bg-black border border-green-900 text-green-500 px-4 py-3 hover:border-green-700 glow text-sm"
+                className={`flex-1 border px-4 py-3 glow text-sm ${
+                  theme === 'modern'
+                    ? 'bg-[#F7F3F2] border-[#666666] text-[#2C2C2C] hover:border-[#1A1A1A]'
+                    : 'bg-black border-green-900 text-green-500 hover:border-green-700'
+                }`}
                 style={{ fontFamily: '"Courier New", monospace' }}
               >
                 [CANCEL]
@@ -810,14 +888,20 @@ export default function MobilePage() {
       {showDrawer && selectedPoint && (
         <>
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className={`fixed inset-0 bg-opacity-50 z-40 ${
+              theme === 'modern' ? 'bg-[#2C2C2C]' : 'bg-black'
+            }`}
             onClick={() => {
               setShowDrawer(false);
               setDrawerExpanded(false);
             }}
           />
           <div
-            className="fixed bottom-0 left-0 right-0 bg-black border-t-2 border-green-500 z-50 transition-all duration-300"
+            className={`fixed bottom-0 left-0 right-0 border-t-2 z-50 transition-all duration-300 ${
+              theme === 'modern'
+                ? 'bg-[#F7F3F2] border-[#666666]'
+                : 'bg-black border-green-500'
+            }`}
             style={{
               maxHeight: drawerExpanded ? '50vh' : 'auto',
             }}
@@ -828,7 +912,9 @@ export default function MobilePage() {
               onClick={() => setDrawerExpanded(!drawerExpanded)}
             >
               <div className="flex-1">
-                <h3 className="text-green-500 font-bold text-base glow">
+                <h3 className={`font-bold text-base glow ${
+                  theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+                }`}>
                   {selectedPoint.name}
                   {selectedPoint.isImpossible && (
                     <span className="ml-2 text-xs text-red-500">[IMPOSSIBLE]</span>
@@ -842,11 +928,17 @@ export default function MobilePage() {
                     setShowDrawer(false);
                     setDrawerExpanded(false);
                   }}
-                  className="text-green-500 hover:text-green-300 text-xs"
+                  className={`text-xs ${
+                    theme === 'modern'
+                      ? 'text-[#2C2C2C] hover:text-[#4A4A4A]'
+                      : 'text-green-500 hover:text-green-300'
+                  }`}
                 >
                   [CLOSE]
                 </button>
-                <span className="text-green-500 text-lg">
+                <span className={`text-lg ${
+                  theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+                }`}>
                   {drawerExpanded ? '▼' : '▲'}
                 </span>
               </div>
@@ -855,24 +947,36 @@ export default function MobilePage() {
             {/* Expanded content - scrollable */}
             {drawerExpanded && (
               <div className="px-4 pb-4 overflow-y-auto" style={{ maxHeight: 'calc(50vh - 80px)' }}>
-                <p className="text-green-400 text-xs mb-3">
+                <p className={`text-xs mb-3 ${
+                  theme === 'modern' ? 'text-[#4A4A4A]' : 'text-green-400'
+                }`}>
                   COORDS: ({selectedPoint.x}, {selectedPoint.y})
                 </p>
 
                 {selectedPoint.isImpossible ? (
                   <p className="text-red-400 text-sm leading-relaxed">
-                    {renderTextWithLinks(selectedPoint.impossibleExplanation || selectedPoint.description)}
+                    {renderTextWithLinks(selectedPoint.impossibleExplanation || selectedPoint.description, theme)}
                   </p>
                 ) : (
                   <>
-                    <p className="text-green-300 text-sm leading-relaxed mb-4">
-                      {renderTextWithLinks(selectedPoint.description)}
+                    <p className={`text-sm leading-relaxed mb-4 ${
+                      theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-300'
+                    }`}>
+                      {renderTextWithLinks(selectedPoint.description, theme)}
                     </p>
                     <div className="flex items-start justify-between gap-4">
-                      <details className="text-xs text-green-600 flex-1">
-                        <summary className="cursor-pointer hover:text-green-400">[REASONING]</summary>
-                        <p className="mt-2 pl-2 border-l border-green-800 text-green-500">
-                          {renderTextWithLinks(selectedPoint.reasoning)}
+                      <details className={`text-xs flex-1 ${
+                        theme === 'modern' ? 'text-[#4A4A4A]' : 'text-green-600'
+                      }`}>
+                        <summary className={`cursor-pointer ${
+                          theme === 'modern' ? 'hover:text-[#2C2C2C]' : 'hover:text-green-400'
+                        }`}>[REASONING]</summary>
+                        <p className={`mt-2 pl-2 border-l ${
+                          theme === 'modern'
+                            ? 'border-[#666666] text-[#2C2C2C]'
+                            : 'border-green-800 text-green-500'
+                        }`}>
+                          {renderTextWithLinks(selectedPoint.reasoning, theme)}
                         </p>
                       </details>
                       <button
@@ -895,24 +999,39 @@ export default function MobilePage() {
 
       {/* Input overlay */}
       {showInputOverlay && (
-        <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex flex-col p-4">
+        <div className={`fixed inset-0 bg-opacity-95 z-50 flex flex-col p-4 ${
+          theme === 'modern' ? 'bg-[#F7F3F2]' : 'bg-black'
+        }`}>
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-md">
-              <div className="text-green-500 text-sm glow mb-4 text-center">
-                CURIO.SPACE // NEURAL CARTOGRAPHY SYSTEM v1.0
+              <div className={`flex items-center justify-between text-sm glow mb-4 ${
+                theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+              }`}>
+                <span className="text-center flex-1">CURIO.SPACE // NEURAL CARTOGRAPHY SYSTEM v1.0</span>
+                <ThemeToggleButton />
               </div>
 
               {inputMode === 'subject' ? (
                 <>
                   <form onSubmit={handleSubmit} className="mb-3">
-                    <div className="flex items-center mb-2 bg-black border border-green-900 p-3">
-                      <span className="text-green-500 mr-2 glow">&gt;</span>
+                    <div className={`flex items-center mb-2 border p-3 ${
+                      theme === 'modern'
+                        ? 'bg-[#F7F3F2] border-[#666666]'
+                        : 'bg-black border-green-900'
+                    }`}>
+                      <span className={`mr-2 glow ${
+                        theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+                      }`}>&gt;</span>
                       <input
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         placeholder="enter subject..."
-                        className="flex-1 bg-transparent text-green-500 focus:outline-none placeholder-green-800 border-0 focus:ring-0 text-base"
+                        className={`flex-1 bg-transparent focus:outline-none border-0 focus:ring-0 text-base ${
+                          theme === 'modern'
+                            ? 'text-[#2C2C2C] placeholder-[#999999]'
+                            : 'text-green-500 placeholder-green-800'
+                        }`}
                         disabled={isGeneratingAxes || isGeneratingSubject}
                         autoFocus
                         style={{
@@ -926,20 +1045,32 @@ export default function MobilePage() {
                   <div className="flex justify-end relative" data-more-menu>
                     <button
                       onClick={() => setShowMoreMenu(!showMoreMenu)}
-                      className="text-green-700 hover:text-green-500 text-sm px-4 py-2"
+                      className={`text-sm px-4 py-2 ${
+                        theme === 'modern'
+                          ? 'text-[#4A4A4A] hover:text-[#2C2C2C]'
+                          : 'text-green-700 hover:text-green-500'
+                      }`}
                     >
                       [MORE ▼]
                     </button>
 
                     {showMoreMenu && (
-                      <div className="absolute top-full right-0 mt-1 bg-black border border-green-900 z-10 min-w-[180px]">
+                      <div className={`absolute top-full right-0 mt-1 border z-10 min-w-[180px] ${
+                        theme === 'modern'
+                          ? 'bg-[#F7F3F2] border-[#666666]'
+                          : 'bg-black border-green-900'
+                      }`}>
                         <button
                           onClick={() => {
                             handleGenerateSubject();
                             setShowMoreMenu(false);
                           }}
                           disabled={isGeneratingAxes || isGeneratingSubject}
-                          className="w-full text-left px-4 py-3 text-green-500 hover:bg-green-900 text-sm disabled:opacity-50 border-b border-green-900"
+                          className={`w-full text-left px-4 py-3 text-sm disabled:opacity-50 border-b ${
+                            theme === 'modern'
+                              ? 'text-[#2C2C2C] hover:bg-[#E8E4E3] border-[#666666]'
+                              : 'text-green-500 hover:bg-green-900 border-green-900'
+                          }`}
                         >
                           [SURPRISE ME]
                         </button>
@@ -948,11 +1079,19 @@ export default function MobilePage() {
                             setInputMode('items');
                             setShowMoreMenu(false);
                           }}
-                          className="w-full text-left px-4 py-3 text-green-500 hover:bg-green-900 text-sm border-b border-green-900"
+                          className={`w-full text-left px-4 py-3 text-sm border-b ${
+                            theme === 'modern'
+                              ? 'text-[#2C2C2C] hover:bg-[#E8E4E3] border-[#666666]'
+                              : 'text-green-500 hover:bg-green-900 border-green-900'
+                          }`}
                         >
                           [FROM 3 ITEMS]
                         </button>
-                        <label className="block w-full text-left px-4 py-3 text-green-500 hover:bg-green-900 text-sm cursor-pointer">
+                        <label className={`block w-full text-left px-4 py-3 text-sm cursor-pointer ${
+                          theme === 'modern'
+                            ? 'text-[#2C2C2C] hover:bg-[#E8E4E3]'
+                            : 'text-green-500 hover:bg-green-900'
+                        }`}>
                           [LOAD FROM FILE]
                           <input
                             type="file"
@@ -972,8 +1111,14 @@ export default function MobilePage() {
               <>
                 <div className="space-y-3 mb-3">
                   {[0, 1, 2].map((index) => (
-                    <div key={index} className="bg-black border border-green-900 p-3">
-                      <div className="text-green-500 text-xs glow mb-1">ITEM {index + 1}:</div>
+                    <div key={index} className={`border p-3 ${
+                      theme === 'modern'
+                        ? 'bg-[#F7F3F2] border-[#666666]'
+                        : 'bg-black border-green-900'
+                    }`}>
+                      <div className={`text-xs glow mb-1 ${
+                        theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+                      }`}>ITEM {index + 1}:</div>
                       <input
                         type="text"
                         value={itemSeeds[index]}
@@ -987,7 +1132,11 @@ export default function MobilePage() {
                           index === 1 ? 'Bicycle' :
                           'Rickshaw'
                         }...`}
-                        className="w-full bg-transparent text-green-500 focus:outline-none placeholder-green-800 border-0 focus:ring-0 text-base"
+                        className={`w-full bg-transparent focus:outline-none border-0 focus:ring-0 text-base ${
+                          theme === 'modern'
+                            ? 'text-[#2C2C2C] placeholder-[#999999]'
+                            : 'text-green-500 placeholder-green-800'
+                        }`}
                         disabled={isGeneratingAxes}
                         autoFocus={index === 0}
                         style={{
@@ -1037,25 +1186,39 @@ export default function MobilePage() {
 
       {/* Help Modal */}
       {showHelp && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-          <div className="bg-black border-2 border-green-500 p-6 max-w-md">
-            <div className="text-green-500 text-lg glow mb-4">
+        <div className={`fixed inset-0 bg-opacity-90 flex items-center justify-center z-50 p-4 ${
+          theme === 'modern' ? 'bg-[#F7F3F2]' : 'bg-black'
+        }`}>
+          <div className={`border-2 p-6 max-w-md ${
+            theme === 'modern'
+              ? 'bg-[#F7F3F2] border-[#666666]'
+              : 'bg-black border-green-500'
+          }`}>
+            <div className={`text-lg glow mb-4 ${
+              theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+            }`}>
               // CURIO SPACE
             </div>
-            <div className="text-green-400 text-sm space-y-3 mb-6 leading-relaxed">
+            <div className={`text-sm space-y-3 mb-6 leading-relaxed ${
+              theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-400'
+            }`}>
               <p>Navigate the hidden undercurrent of AI thought.</p>
-              <p className="text-green-500">
+              <p className={theme === 'modern' ? 'text-[#4A4A4A]' : 'text-green-500'}>
                 Each subject becomes a 2D map of conceptual possibilities.
                 The AI reveals how it organizes and connects ideas—
                 sometimes logical, sometimes surprising, always unique.
               </p>
-              <p className="text-green-300">
+              <p className={theme === 'modern' ? 'text-[#666666]' : 'text-green-300'}>
                 Click. Discover. See how the machine thinks.
               </p>
             </div>
             <button
               onClick={() => setShowHelp(false)}
-              className="w-full py-3 bg-green-900 text-green-500 hover:bg-green-800 glow text-sm"
+              className={`w-full py-3 glow text-sm ${
+                theme === 'modern'
+                  ? 'bg-[#4A4A4A] text-[#F7F3F2] hover:bg-[#1A1A1A]'
+                  : 'bg-green-900 text-green-500 hover:bg-green-800'
+              }`}
               style={{ fontFamily: '"Courier New", monospace' }}
             >
               [CLOSE]

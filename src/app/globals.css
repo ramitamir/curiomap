@@ -21,6 +21,14 @@ div[style*="position: fixed"][style*="bottom"][style*="left"] {
   --terminal-glow: rgba(0, 255, 65, 0.5);
 }
 
+/* Modern theme colors */
+body.modern {
+  --terminal-bg: #F7F3F2;
+  --terminal-green: #2C2C2C;
+  --terminal-dim: #4A4A4A;
+  --terminal-glow: rgba(44, 44, 44, 0.3);
+}
+
 body {
   margin: 0;
   padding: 0;

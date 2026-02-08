@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { Axis, Manifestation } from '@/lib/types';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface CurioGridProps {
   xAxis: Axis;
@@ -25,6 +26,7 @@ export default function CurioGrid({
   onPointSelect,
   isMobile = false,
 }: CurioGridProps) {
+  const { theme } = useTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [hoveredPoint, setHoveredPoint] = useState<Manifestation | null>(null);
@@ -70,13 +72,19 @@ export default function CurioGrid({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear with terminal background
-    ctx.fillStyle = '#0a0e0a';
+    // Theme colors
+    const bgColor = theme === 'modern' ? '#F7F3F2' : '#0a0e0a';
+    const primaryColor = theme === 'modern' ? '#2C2C2C' : '#00ff41';
+    const dimColor = theme === 'modern' ? '#4A4A4A' : '#00aa2e';
+    const fadedColor = theme === 'modern' ? '#666666' : '#004411';
+
+    // Clear with background
+    ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-    const green = '#00ff41';
-    const dimGreen = '#00aa2e';
-    const fadedGreen = '#004411'; // Very faded for axes
+    const green = primaryColor;
+    const dimGreen = dimColor;
+    const fadedGreen = fadedColor;
 
     // Draw axes (faded)
     ctx.strokeStyle = fadedGreen;
@@ -159,7 +167,9 @@ export default function CurioGrid({
 
         // Glow effect for selection
         if (isSelected || isHovered) {
-          ctx.strokeStyle = 'rgba(0, 255, 65, 0.5)';
+          ctx.strokeStyle = theme === 'modern'
+            ? 'rgba(44, 44, 44, 0.4)'
+            : 'rgba(0, 255, 65, 0.5)';
           ctx.lineWidth = 3;
           ctx.stroke();
         }
@@ -180,7 +190,9 @@ export default function CurioGrid({
 
         // Glow effect
         if (isSelected || isHovered) {
-          ctx.strokeStyle = 'rgba(0, 255, 65, 0.5)';
+          ctx.strokeStyle = theme === 'modern'
+            ? 'rgba(44, 44, 44, 0.4)'
+            : 'rgba(0, 255, 65, 0.5)';
           ctx.lineWidth = 3;
           ctx.stroke();
         }
@@ -194,7 +206,7 @@ export default function CurioGrid({
         }
       }
     });
-  }, [xAxis, yAxis, manifestations, hoveredPoint, selectedPointId, canvasSize]);
+  }, [xAxis, yAxis, manifestations, hoveredPoint, selectedPointId, canvasSize, theme]);
 
   function wrapText(
     ctx: CanvasRenderingContext2D,
@@ -300,12 +312,14 @@ export default function CurioGrid({
           <>
             {/* X-axis min label (left) - rotated 90° counterclockwise */}
             <div
-              className="absolute text-green-500 text-sm cursor-text hover:opacity-70 pointer-events-auto"
+              className={`absolute text-sm cursor-text hover:opacity-70 pointer-events-auto ${
+                theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+              }`}
               style={{
-                left: '5px',
+                left: `${PADDING / 2}px`,
                 top: '50%',
                 fontFamily: '"Courier New", monospace',
-                transform: 'translateY(-50%) rotate(-90deg)',
+                transform: 'translate(-50%, -50%) rotate(-90deg)',
                 whiteSpace: 'nowrap',
               }}
               onClick={() => onLabelClick?.('x', 'min')}
@@ -315,12 +329,14 @@ export default function CurioGrid({
 
             {/* X-axis max label (right) - rotated 90° clockwise */}
             <div
-              className="absolute text-green-500 text-sm cursor-text hover:opacity-70 pointer-events-auto"
+              className={`absolute text-sm cursor-text hover:opacity-70 pointer-events-auto ${
+                theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+              }`}
               style={{
-                right: '5px',
+                right: `${PADDING / 2}px`,
                 top: '50%',
                 fontFamily: '"Courier New", monospace',
-                transform: 'translateY(-50%) rotate(90deg)',
+                transform: 'translate(50%, -50%) rotate(90deg)',
                 whiteSpace: 'nowrap',
               }}
               onClick={() => onLabelClick?.('x', 'max')}
@@ -330,7 +346,9 @@ export default function CurioGrid({
 
             {/* Y-axis max label (top) */}
             <div
-              className="absolute text-green-500 text-sm cursor-text hover:opacity-70 text-center pointer-events-auto"
+              className={`absolute text-sm cursor-text hover:opacity-70 text-center pointer-events-auto ${
+                theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+              }`}
               style={{
                 left: '50%',
                 transform: 'translateX(-50%)',
@@ -345,7 +363,9 @@ export default function CurioGrid({
 
             {/* Y-axis min label (bottom) */}
             <div
-              className="absolute text-green-500 text-sm cursor-text hover:opacity-70 text-center pointer-events-auto"
+              className={`absolute text-sm cursor-text hover:opacity-70 text-center pointer-events-auto ${
+                theme === 'modern' ? 'text-[#2C2C2C]' : 'text-green-500'
+              }`}
               style={{
                 left: '50%',
                 transform: 'translateX(-50%)',
