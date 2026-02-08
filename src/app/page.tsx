@@ -750,7 +750,7 @@ function DesktopPage() {
           {!subject ? (
             <div>
               <div className="text-green-500 text-xs glow mb-3">
-                CURIO.SPACE // NEURAL CARTOGRAPHY SYSTEM v1.0!
+                CURIO.SPACE // NEURAL CARTOGRAPHY SYSTEM v1.0
               </div>
 
               {inputMode === 'subject' ? (
@@ -794,7 +794,6 @@ function DesktopPage() {
                         >
                           [SURPRISE ME]
                         </button>
-                        
                         <button
                           onClick={() => {
                             setInputMode('items');

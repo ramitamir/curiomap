@@ -29,7 +29,6 @@ export default function CurioGrid({
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [hoveredPoint, setHoveredPoint] = useState<Manifestation | null>(null);
   const [cursorInGrid, setCursorInGrid] = useState(false);
-  const [isModern, setIsModern] = useState(false);
 
   const PADDING = 80; // Less padding for fuller screen use
 
@@ -48,19 +47,6 @@ export default function CurioGrid({
   }, []);
 
   const gridSize = canvasSize.width - PADDING * 2;
-
-  // Track theme changes
-  useEffect(() => {
-    const updateTheme = () => {
-      try {
-        setIsModern(document.body.classList.contains('modern'));
-      } catch {}
-    };
-    updateTheme();
-    const handler = () => updateTheme();
-    window.addEventListener('curio-theme-change', handler);
-    return () => window.removeEventListener('curio-theme-change', handler);
-  }, []);
 
   const gridToCanvas = (x: number, y: number) => {
     const canvasX = PADDING + ((x + 100) / 200) * gridSize;
@@ -84,19 +70,16 @@ export default function CurioGrid({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear with background according to theme
-    ctx.fillStyle = isModern ? '#F7F3F2' : '#0a0e0a';
+    // Clear with terminal background
+    ctx.fillStyle = '#0a0e0a';
     ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-    const black = '#000000';
-    const dimBlack = 'rgba(0, 0, 0, 0.6)';
-    const fadedBlack = 'rgba(0, 0, 0, 0.2)'; // Very faded for axes
     const green = '#00ff41';
     const dimGreen = '#00aa2e';
-    const fadedGreen = '#004411';
+    const fadedGreen = '#004411'; // Very faded for axes
 
     // Draw axes (faded)
-    ctx.strokeStyle = isModern ? fadedBlack : fadedGreen;
+    ctx.strokeStyle = fadedGreen;
     ctx.lineWidth = 1;
 
     // X-axis
@@ -112,7 +95,7 @@ export default function CurioGrid({
     ctx.stroke();
 
     // Draw corner markers for extremes (L-shaped brackets)
-    ctx.strokeStyle = isModern ? dimBlack : dimGreen;
+    ctx.strokeStyle = dimGreen;
     ctx.lineWidth = 2;
     const cornerSize = 10;
 
@@ -159,7 +142,7 @@ export default function CurioGrid({
       // Check if impossible coordinate
       if (m.isImpossible) {
         // Draw X mark instead of circle
-        ctx.strokeStyle = isModern ? black : green;
+        ctx.strokeStyle = green;
         ctx.lineWidth = 2;
         const size = isSelected ? 10 : 6;
 
@@ -176,7 +159,7 @@ export default function CurioGrid({
 
         // Glow effect for selection
         if (isSelected || isHovered) {
-          ctx.strokeStyle = isModern ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 255, 65, 0.5)';
+          ctx.strokeStyle = 'rgba(0, 255, 65, 0.5)';
           ctx.lineWidth = 3;
           ctx.stroke();
         }
@@ -184,7 +167,7 @@ export default function CurioGrid({
         // Show "IMPOSSIBLE" text only on hover
         if (isHovered && !isSelected) {
           ctx.font = '12px "Courier New", monospace';
-          ctx.fillStyle = isModern ? black : green;
+          ctx.fillStyle = green;
           ctx.textAlign = 'center';
           ctx.fillText('IMPOSSIBLE', pos.x, pos.y - 15);
         }
@@ -192,12 +175,12 @@ export default function CurioGrid({
         // Draw normal circle point
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, isSelected ? 8 : 5, 0, Math.PI * 2);
-        ctx.fillStyle = isModern ? black : green;
+        ctx.fillStyle = green;
         ctx.fill();
 
         // Glow effect
         if (isSelected || isHovered) {
-          ctx.strokeStyle = isModern ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 255, 65, 0.5)';
+          ctx.strokeStyle = 'rgba(0, 255, 65, 0.5)';
           ctx.lineWidth = 3;
           ctx.stroke();
         }
@@ -205,13 +188,13 @@ export default function CurioGrid({
         // Show name only on hover
         if (isHovered && !isSelected) {
           ctx.font = '12px "Courier New", monospace';
-          ctx.fillStyle = isModern ? black : green;
+          ctx.fillStyle = green;
           ctx.textAlign = 'center';
           ctx.fillText(m.name, pos.x, pos.y - 15);
         }
       }
     });
-  }, [xAxis, yAxis, manifestations, hoveredPoint, selectedPointId, canvasSize, isModern]);
+  }, [xAxis, yAxis, manifestations, hoveredPoint, selectedPointId, canvasSize]);
 
   function wrapText(
     ctx: CanvasRenderingContext2D,

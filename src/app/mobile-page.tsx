@@ -645,7 +645,6 @@ export default function MobilePage() {
               >
                 [REDO AXES]
               </button>
-              
               <button
                 onClick={handleSaveToFile}
                 className="text-green-500 hover:text-green-300"
@@ -683,7 +682,7 @@ export default function MobilePage() {
 
         {/* Axis tip banner - first time only */}
         {showAxisTip && subject && (
-          <div className="absolute bottom-20 left-0 right-0 mx-3 bg-black border border-green-500 p-3 z-30 animate-pulse">
+          <div className="absolute bottom-20 left-0 right-0 mx-3 bg-green-950 border border-green-500 p-3 z-30 animate-pulse">
             <div className="flex items-center justify-between">
               <p className="text-green-400 text-xs font-mono flex-1">
                 TIP: TAP AXIS LABELS TO EDIT
@@ -900,7 +899,7 @@ export default function MobilePage() {
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-md">
               <div className="text-green-500 text-sm glow mb-4 text-center">
-                CURIO.SPACE // NEURAL CARTOGRAPHY SYSTEM v1.0!
+                CURIO.SPACE // NEURAL CARTOGRAPHY SYSTEM v1.0
               </div>
 
               {inputMode === 'subject' ? (
